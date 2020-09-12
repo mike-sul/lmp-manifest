@@ -4,11 +4,14 @@ FROM ubuntu:20.04
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+ENV MACHINE=intel-corei7-64
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEV_USER_NAME=Builder
+ARG DEV_USER_EMAIL="builder@foundries.io"
 ARG DEV_USER=builder
 ARG DEV_USER_PASSWD=builder
+ARG DEV_OSF_TOKEN=foo
 
 # FIO PPA for additional dependencies and newer packages
 RUN apt-get update \
@@ -43,3 +46,10 @@ RUN echo $DEV_USER:$DEV_USER_PASSWD | chpasswd
 
 # Initialize development environment for $DEV_USER.
 RUN sudo -u $DEV_USER -H git config --global credential.helper 'cache --timeout=3600'
+RUN sudo -u $DEV_USER -H git config --global user.name $DEV_USER_NAME
+RUN sudo -u $DEV_USER -H git config --global user.email $DEV_USER_EMAIL
+
+RUN echo "machine source.foundries.io" >> /home/$DEV_USER/.netrc
+RUN echo "login $DEV_OSF_TOKEN" >> /home/$DEV_USER/.netrc
+
+CMD /bin/bash -c "source setup-environment build && /bin/bash"
